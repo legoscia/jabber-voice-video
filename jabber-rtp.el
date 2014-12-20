@@ -30,6 +30,14 @@
   '(add-to-list 'jabber-jingle-applications
 		(cons "urn:xmpp:jingle:apps:rtp:1" 'start-jabber-jingle-rtp)))
 
+;;;###autoload
+(eval-after-load "jabber-disco"
+  '(mapc 'jabber-disco-advertise-feature
+	 '("urn:xmpp:jingle:apps:rtp:1"
+	   "urn:xmpp:jingle:apps:rtp:audio"
+	   "urn:xmpp:jingle:apps:rtp:video"
+	   "urn:xmpp:jingle:transports:ice-udp:1")))
+
 (defconst jabber-rtp-htdocs-dir
   (expand-file-name "htdocs" (file-name-directory load-file-name)))
 
