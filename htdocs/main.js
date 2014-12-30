@@ -228,16 +228,7 @@ function setRemote(message) {
 
 function sendMessage(message) {
   var msgString;
-  switch (message.type) {
-  case 'offer':
-    msgString = 'offer\n' + message.sdp;
-    break;
-  case 'error':
-    msgString = 'error\n' + message.body;
-    break;
-  default:
-    msgString = JSON.stringify(message);
-  }
+  msgString = JSON.stringify(message);
   console.log('C->S: ' + msgString);
   channel.send(msgString);
 }
@@ -270,9 +261,7 @@ function onChannelOpened() {
 }
 function onChannelMessage(message) {
   console.log('S->C: ' + message.data);
-  var firstNl = message.data.indexOf("\n");
-  var msg = {'type': message.data.slice(0, firstNl),
-	     'body': message.data.slice(firstNl + 1)};
+  var msg = JSON.parse(message.data);
   // Since the turn response is async and also GAE might disorder the
   // Message delivery due to possible datastore query at server side,
   // So callee needs to cache messages before peerConnection is created.

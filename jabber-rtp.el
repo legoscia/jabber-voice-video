@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'websocket)
+(require 'json)
 
 ;;;###autoload
 (eval-after-load "jabber-jingle"
@@ -146,22 +147,24 @@
     (:ws-open
      (let ((ws-client (second event)))
        (plist-put state-data :ws-client ws-client)
-       (websocket-send-text ws-client
-			    (concat "offer\n" (plist-get state-data :sdp-from-initiator)))
+       (websocket-send-text
+	ws-client
+	(json-encode `((type . "offer")
+		       (body . ,(plist-get state-data :sdp-from-initiator)))))
        (list :responding state-data)))
     (:ws
-     (let ((payload (second event)))
+     (let ((payload (json-read-from-string (second event))))
        (cond
-	((string-prefix-p "offer\n" payload)
-	 (let* ((sdp (substring payload 6))
+	((equal "candidate" (cdr (assq 'type payload)))
+	 (let* ((sdp (cdr (assq 'sdp payload)))
 		(jingle-description (jabber--sdp-to-jingle sdp)))
 	   ;; TODO
 	   )
 	 )
-	((string-prefix-p "error\n" payload)
+	((equal "error" (cdr (assq 'type payload)))
 	 (destructuring-bind (_error reason message . maybe-sdp)
 	     ;; XXX: don't split maybe-sdp into lines
-	     (split-string payload "\n")
+	     (split-string (cdr (assq 'body payload)) "\n")
 	   (message "Cannot negotiate audio/video call with %s: %s"
 		    (jabber-jid-displayname (plist-get state-data :jid))
 		    message)
